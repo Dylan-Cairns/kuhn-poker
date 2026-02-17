@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kuhn-poker"
+version = "0.1.0"
+description = "Minimum-viable RL bot project for 2-player Kuhn Poker."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "numpy>=1.26",
+  "gymnasium>=0.29",
+  "pettingzoo>=1.24",
+  "stable-baselines3>=2.3",
+  "sb3-contrib>=2.3",
+  "supersuit>=3.9",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.6",
+]
+
+[tool.setuptools.packages.find]
+include = ["kuhn_poker*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
