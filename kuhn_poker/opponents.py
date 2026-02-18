@@ -40,8 +40,8 @@ def simple_heuristic_action(
             return int(Action.CHECK_OR_CALL)
         return int(legal_actions[0])
 
-    if private_card == CARD_K and action_mask[Action.BET_OR_RAISE] == 1:
-        return int(Action.BET_OR_RAISE)
+    if private_card == CARD_K and action_mask[Action.BET] == 1:
+        return int(Action.BET)
     if action_mask[Action.CHECK_OR_CALL] == 1:
         return int(Action.CHECK_OR_CALL)
     return int(legal_actions[0])

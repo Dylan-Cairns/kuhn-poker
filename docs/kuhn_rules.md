@@ -46,7 +46,7 @@ Phase transitions:
 Fixed discrete action IDs:
 
 - `0 = CHECK_OR_CALL`
-- `1 = BET_OR_RAISE`
+- `1 = BET`
 - `2 = FOLD`
 
 Mask semantics:
@@ -83,18 +83,18 @@ Public history starts empty (`[]`) and legal actions are:
 
 1. `[]`:
 - `CHECK_OR_CALL` (interpreted as `check`)
-- `BET_OR_RAISE` (interpreted as `bet`)
+- `BET` (interpreted as `bet`)
 
 2. `["check"]`:
 - `CHECK_OR_CALL` (interpreted as `check`)
-- `BET_OR_RAISE` (interpreted as `bet`)
+- `BET` (interpreted as `bet`)
 
 3. `["bet"]` or `["check", "bet"]`:
 - `CHECK_OR_CALL` (interpreted as `call`)
 - `FOLD` (interpreted as `fold`)
 
 `FOLD` is illegal unless facing a bet.
-`BET_OR_RAISE` is illegal when already facing a bet.
+`BET` is illegal when already facing a bet.
 
 ## Terminal Conditions
 

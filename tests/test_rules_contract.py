@@ -33,13 +33,13 @@ def _run_hand(cards: tuple[int, int], actions: list[int]) -> tuple[dict[str, flo
         ),
         (
             (CARD_J, CARD_K),
-            [int(Action.BET_OR_RAISE), int(Action.FOLD)],
+            [int(Action.BET), int(Action.FOLD)],
             ["bet", "fold"],
             {AGENT_NAMES[0]: 1.0, AGENT_NAMES[1]: -1.0},
         ),
         (
             (CARD_J, CARD_K),
-            [int(Action.BET_OR_RAISE), int(Action.CHECK_OR_CALL)],
+            [int(Action.BET), int(Action.CHECK_OR_CALL)],
             ["bet", "call"],
             {AGENT_NAMES[0]: -2.0, AGENT_NAMES[1]: 2.0},
         ),
@@ -47,7 +47,7 @@ def _run_hand(cards: tuple[int, int], actions: list[int]) -> tuple[dict[str, flo
             (CARD_K, CARD_J),
             [
                 int(Action.CHECK_OR_CALL),
-                int(Action.BET_OR_RAISE),
+                int(Action.BET),
                 int(Action.CHECK_OR_CALL),
             ],
             ["check", "bet", "call"],
@@ -57,7 +57,7 @@ def _run_hand(cards: tuple[int, int], actions: list[int]) -> tuple[dict[str, flo
             (CARD_K, CARD_J),
             [
                 int(Action.CHECK_OR_CALL),
-                int(Action.BET_OR_RAISE),
+                int(Action.BET),
                 int(Action.FOLD),
             ],
             ["check", "bet", "fold"],
@@ -95,6 +95,6 @@ def test_legal_masks_match_betting_state() -> None:
     obs = env.observe(AGENT_NAMES[1])
     assert np.array_equal(obs["action_mask"], np.array([1, 1, 0], dtype=np.int8))
 
-    env.step(int(Action.BET_OR_RAISE))
+    env.step(int(Action.BET))
     obs = env.observe(AGENT_NAMES[0])
     assert np.array_equal(obs["action_mask"], np.array([1, 0, 1], dtype=np.int8))

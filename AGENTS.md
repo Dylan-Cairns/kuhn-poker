@@ -18,7 +18,7 @@ Primary optimization target is implementation clarity and a clean learning proje
 - Training setup: shared policy self-play (same policy controls both players)
 - Action IDs are fixed:
   - `0 = CHECK_OR_CALL`
-  - `1 = BET_OR_RAISE`
+  - `1 = BET`
   - `2 = FOLD`
 - Environment must provide an invalid-action mask each turn
 

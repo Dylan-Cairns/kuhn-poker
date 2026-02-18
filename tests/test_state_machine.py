@@ -20,7 +20,7 @@ def test_check_bet_call_phase_path() -> None:
     assert env.phase == HandPhase.P1_ACT
     assert env.agent_selection == AGENT_NAMES[1]
 
-    env.step(int(Action.BET_OR_RAISE))
+    env.step(int(Action.BET))
     assert env.phase == HandPhase.P0_RESPONSE
     assert env.agent_selection == AGENT_NAMES[0]
 
@@ -33,7 +33,7 @@ def test_bet_fold_phase_path() -> None:
     env = KuhnPokerAECEnv()
     env.reset(seed=0)
 
-    env.step(int(Action.BET_OR_RAISE))
+    env.step(int(Action.BET))
     assert env.phase == HandPhase.P1_RESPONSE
     assert env.agent_selection == AGENT_NAMES[1]
 

@@ -43,7 +43,7 @@ def test_observation_layout_for_check_bet_response() -> None:
     assert np.array_equal(p1_obs["observation"][ACTOR_SLICE], np.array([0, 1], dtype=np.int8))
     assert np.array_equal(p1_obs["action_mask"], np.array([1, 1, 0], dtype=np.int8))
 
-    env.step(int(Action.BET_OR_RAISE))
+    env.step(int(Action.BET))
     p0_obs = env.observe(AGENT_NAMES[0])
     assert np.array_equal(
         p0_obs["observation"][HISTORY_SLICE], np.array([0, 0, 0, 1, 0], dtype=np.int8)
@@ -57,7 +57,7 @@ def test_terminal_observation_uses_terminal_history_and_no_actor() -> None:
     env.reset(seed=0)
 
     env.step(int(Action.CHECK_OR_CALL))
-    env.step(int(Action.BET_OR_RAISE))
+    env.step(int(Action.BET))
     env.step(int(Action.FOLD))
 
     for agent in AGENT_NAMES:

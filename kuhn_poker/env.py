@@ -197,7 +197,7 @@ class KuhnPokerAECEnv(AECEnv):
         facing_bet = self.phase in (HandPhase.P0_RESPONSE, HandPhase.P1_RESPONSE)
         if action == Action.CHECK_OR_CALL:
             return "call" if facing_bet else "check"
-        if action == Action.BET_OR_RAISE:
+        if action == Action.BET:
             return "bet"
         return "fold"
 

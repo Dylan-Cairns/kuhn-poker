@@ -6,7 +6,7 @@ from typing import Final
 
 class Action(IntEnum):
     CHECK_OR_CALL = 0
-    BET_OR_RAISE = 1
+    BET = 1
     FOLD = 2
 
 

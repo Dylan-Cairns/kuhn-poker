@@ -17,7 +17,7 @@ def test_heuristic_plays_strong_and_weak_cards() -> None:
     facing_bet_mask = np.array([1, 0, 1], dtype=np.int8)
 
     assert (
-        simple_heuristic_action(CARD_K, [], passive_mask) == int(Action.BET_OR_RAISE)
+        simple_heuristic_action(CARD_K, [], passive_mask) == int(Action.BET)
     )
     assert (
         simple_heuristic_action(CARD_J, ["bet"], facing_bet_mask) == int(Action.FOLD)
