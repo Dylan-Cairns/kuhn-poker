@@ -22,6 +22,11 @@ dev = [
   "pytest>=8.0",
   "ruff>=0.6",
 ]
+onnx = [
+  "onnx>=1.16",
+  "onnxscript>=0.1",
+  "onnxruntime>=1.18",
+]
 
 [tool.setuptools.packages.find]
 include = ["kuhn_poker*"]

@@ -79,6 +79,7 @@ Target layout:
 - `kuhn_poker/wrappers.py` - compatibility wrappers for SB3/masking
 - `kuhn_poker/opponents.py` - random-legal and heuristic opponents
 - `scripts/train.py` - MaskablePPO training entrypoint
+- `scripts/export_onnx.py` - checkpoint to ONNX export entrypoint
 - `scripts/eval.py` - evaluation entrypoint
 - `scripts/smoke_test.py` - end-to-end sanity run
 - `tests/` - environment and integration checks
@@ -90,6 +91,7 @@ If layout changes, keep README and command examples aligned.
 Agents should keep these working (update as implementation evolves):
 - Install deps: `pip install -e .` or `pip install -r requirements.txt`
 - Train: `python scripts/train.py`
+- Export ONNX: `python scripts/export_onnx.py --checkpoint-path checkpoints/maskable_ppo_kuhn.zip --onnx-out models/kuhn_policy.onnx`
 - Eval: `python scripts/eval.py`
 - Sanity run: `python scripts/smoke_test.py`
 - Tests: `pytest -q`

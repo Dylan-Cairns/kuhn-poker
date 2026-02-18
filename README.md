@@ -18,6 +18,12 @@ py -3.12 -m venv .venv
 pip install -e .[dev]
 ```
 
+Install ONNX export dependencies when needed:
+
+```bash
+pip install -e .[onnx]
+```
+
 Run basic checks:
 
 ```bash
@@ -31,10 +37,22 @@ Run a short masked PPO training smoke:
 python scripts/train.py --total-timesteps 2048 --n-steps 128 --batch-size 64
 ```
 
+Export a trained checkpoint to ONNX:
+
+```bash
+python scripts/export_onnx.py --checkpoint-path checkpoints/maskable_ppo_kuhn.zip --onnx-out models/kuhn_policy.onnx
+```
+
 Play against a trained checkpoint in the CLI:
 
 ```bash
 python scripts/play_cli.py --model-path checkpoints/maskable_ppo_kuhn.zip
+```
+
+Play as second player:
+
+```bash
+python scripts/play_cli.py --model-path checkpoints/maskable_ppo_kuhn.zip --human-seat 1
 ```
 
 ## Current Layout
@@ -43,6 +61,7 @@ python scripts/play_cli.py --model-path checkpoints/maskable_ppo_kuhn.zip
 - `kuhn_poker/opponents.py`: baseline opponents (random legal + simple heuristic)
 - `kuhn_poker/wrappers.py`: helper functions for conversion/masking integration
 - `scripts/train.py`: training entrypoint scaffold
+- `scripts/export_onnx.py`: checkpoint to ONNX export entrypoint
 - `scripts/eval.py`: evaluation entrypoint scaffold
 - `scripts/smoke_test.py`: end-to-end sanity check
 - `tests/`: smoke tests for environment/opponents

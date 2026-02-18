@@ -17,9 +17,6 @@ if str(REPO_ROOT) not in sys.path:
 from kuhn_poker.constants import AGENT_NAMES, CARD_LABELS, Action
 from kuhn_poker.env import HandPhase, KuhnPokerAECEnv
 
-HUMAN_AGENT = AGENT_NAMES[0]
-BOT_AGENT = AGENT_NAMES[1]
-
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Play Kuhn Poker vs a trained bot.")
@@ -30,6 +27,13 @@ def parse_args() -> argparse.Namespace:
         help="Path to .zip checkpoint from scripts/train.py",
     )
     parser.add_argument("--seed", type=int, default=7)
+    parser.add_argument(
+        "--human-seat",
+        type=int,
+        choices=(0, 1),
+        default=0,
+        help="Seat index for the human player (0 acts first, 1 acts second).",
+    )
     parser.add_argument(
         "--hands",
         type=int,
@@ -119,13 +123,17 @@ def prompt_human_action(mask: np.ndarray, phase: HandPhase) -> Optional[int]:
 
 
 def play_hand(
-    env: KuhnPokerAECEnv, model: MaskablePPO, deterministic_bot: bool
+    env: KuhnPokerAECEnv,
+    model: MaskablePPO,
+    deterministic_bot: bool,
+    human_agent: str,
+    bot_agent: str,
 ) -> tuple[bool, dict[str, float]]:
     returns = {agent: 0.0 for agent in AGENT_NAMES}
     env.reset()
 
     print("")
-    print(f"Your card: {card_label(env.private_cards[HUMAN_AGENT])}")
+    print(f"Your card: {card_label(env.private_cards[human_agent])}")
 
     for agent in env.agent_iter(max_iter=10):
         obs, reward, termination, truncation, _ = env.last()
@@ -133,7 +141,7 @@ def play_hand(
 
         if termination or truncation:
             action = None
-        elif agent == HUMAN_AGENT:
+        elif agent == human_agent:
             phase = env.phase
             print(f"History: {format_history(env.history)}")
             action = prompt_human_action(obs["action_mask"], phase)
@@ -154,13 +162,13 @@ def play_hand(
 
     print(
         "Reveal: "
-        f"you={card_label(env.private_cards[HUMAN_AGENT])}, "
-        f"bot={card_label(env.private_cards[BOT_AGENT])}"
+        f"you={card_label(env.private_cards[human_agent])}, "
+        f"bot={card_label(env.private_cards[bot_agent])}"
     )
     print(f"Final history: {format_history(env.history)}")
     print(
-        f"Hand return: you={returns[HUMAN_AGENT]:+.1f}, "
-        f"bot={returns[BOT_AGENT]:+.1f}"
+        f"Hand return: you={returns[human_agent]:+.1f}, "
+        f"bot={returns[bot_agent]:+.1f}"
     )
     return False, returns
 
@@ -178,13 +186,15 @@ def prompt_continue() -> bool:
 def main() -> None:
     args = parse_args()
     model_path = resolve_model_path(args.model_path)
+    human_agent = AGENT_NAMES[args.human_seat]
+    bot_agent = AGENT_NAMES[1 - args.human_seat]
 
     model = MaskablePPO.load(model_path)
     env = KuhnPokerAECEnv()
     env.reset(seed=args.seed)
 
     print("Kuhn Poker CLI")
-    print("You are player_0. Bot is player_1.")
+    print(f"You are {human_agent}. Bot is {bot_agent}.")
     print(f"Loaded model: {model_path}")
     print_help()
 
@@ -204,6 +214,8 @@ def main() -> None:
             env=env,
             model=model,
             deterministic_bot=not args.stochastic_bot,
+            human_agent=human_agent,
+            bot_agent=bot_agent,
         )
 
         if not quit_requested:
@@ -211,8 +223,8 @@ def main() -> None:
             for agent in AGENT_NAMES:
                 totals[agent] += hand_returns[agent]
             print(
-                f"Session score: you={totals[HUMAN_AGENT]:+.1f}, "
-                f"bot={totals[BOT_AGENT]:+.1f}"
+                f"Session score: you={totals[human_agent]:+.1f}, "
+                f"bot={totals[bot_agent]:+.1f}"
             )
             if args.hands == 0:
                 quit_requested = not prompt_continue()
@@ -222,8 +234,8 @@ def main() -> None:
         print("")
         print(
             f"Final score after {completed_hands} completed hand(s): "
-            f"you={totals[HUMAN_AGENT]:+.1f}, "
-            f"bot={totals[BOT_AGENT]:+.1f}"
+            f"you={totals[human_agent]:+.1f}, "
+            f"bot={totals[bot_agent]:+.1f}"
         )
     print("Session ended.")
 
