@@ -15,5 +15,5 @@ checkpoints/
 logs/
 models/
 !web/public/models/
-web/public/models/*.onnx
+!web/public/models/*.onnx
 !web/public/models/.gitkeep
