@@ -4,6 +4,7 @@ __pycache__/
 .mypy_cache/
 .venv/
 web/node_modules/
+web/dist/
 *.egg-info/
 *.pyc
 *.pyo
@@ -13,3 +14,6 @@ runs/
 checkpoints/
 logs/
 models/
+!web/public/models/
+web/public/models/*.onnx
+!web/public/models/.gitkeep

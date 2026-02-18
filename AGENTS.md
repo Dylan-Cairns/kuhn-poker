@@ -87,6 +87,9 @@ Target layout:
 - `web/src/game/engine.test.ts` - frontend unit/parity tests
 - `web/src/game/onnx_adapter.ts` - browser ONNX Runtime policy adapter
 - `web/src/game/onnx_adapter.test.ts` - adapter contract/unit tests
+- `web/src/App.tsx` - React single-page human-vs-bot interface
+- `web/src/main.tsx` - React entrypoint
+- `web/public/models/` - static ONNX model files for browser inference
 - `docs/web_inference_contract.md` - browser ONNX I/O contract
 
 If layout changes, keep README and command examples aligned.
@@ -101,6 +104,8 @@ Agents should keep these working (update as implementation evolves):
 - Sanity run: `python scripts/smoke_test.py`
 - Tests: `pytest -q`
 - Frontend engine tests: `cd web && npm test`
+- Frontend dev server: `cd web && npm run dev`
+- Frontend production build: `cd web && npm run build`
 
 ## Validation Checklist
 

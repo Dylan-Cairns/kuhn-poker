@@ -39,6 +39,20 @@ npm install
 npm test
 ```
 
+Run the web app locally:
+
+```bash
+cd web
+npm run dev
+```
+
+Build static assets (for GitHub Pages):
+
+```bash
+cd web
+npm run build
+```
+
 Run a short masked PPO training smoke:
 
 ```bash
@@ -50,6 +64,30 @@ Export a trained checkpoint to ONNX:
 ```bash
 python scripts/export_onnx.py --checkpoint-path checkpoints/maskable_ppo_kuhn.zip --onnx-out models/kuhn_policy.onnx
 ```
+
+Copy the exported model into the web public folder:
+
+```bash
+copy models\kuhn_policy.onnx web\public\models\kuhn_policy.onnx
+```
+
+## Deploy to GitHub Pages
+
+This repo includes a workflow at `.github/workflows/deploy_pages.yml` that builds `web/` and deploys `web/dist` to GitHub Pages.
+
+One-time setup in GitHub:
+
+1. Go to `Settings -> Pages`.
+2. Under `Build and deployment`, set `Source` to `GitHub Actions`.
+
+Deploy flow:
+
+1. Commit and push your web changes (including `web/public/models/kuhn_policy.onnx`).
+2. The `Deploy Web App to GitHub Pages` workflow runs automatically on pushes to `main` that touch `web/**`.
+3. Your site is published at:
+   - `https://<your-github-username>.github.io/<your-repo-name>/`
+
+You can also trigger deployment manually from `Actions -> Deploy Web App to GitHub Pages -> Run workflow`.
 
 Play against a trained checkpoint in the CLI:
 
@@ -79,6 +117,9 @@ python scripts/play_cli.py --model-path checkpoints/maskable_ppo_kuhn.zip --huma
 - `web/src/game/engine.test.ts`: frontend parity/unit tests
 - `web/src/game/onnx_adapter.ts`: browser ONNX Runtime adapter for policy inference
 - `web/src/game/onnx_adapter.test.ts`: adapter contract/unit tests
+- `web/src/App.tsx`: single-page React UI for human-vs-bot play
+- `web/src/main.tsx`: React app entrypoint
+- `web/public/models/`: static ONNX model location for browser inference
 
 ## Next Steps
 

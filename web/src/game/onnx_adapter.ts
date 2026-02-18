@@ -1,5 +1,7 @@
 import { chooseBotActionFromMaskedLogits } from "./engine"
 import type { ActionId, ActionMask, BotDecisionMode } from "./types"
+import ortWasmUrl from "onnxruntime-web/ort-wasm-simd-threaded.wasm?url"
+import ortWasmMjsUrl from "onnxruntime-web/ort-wasm-simd-threaded.mjs?url"
 
 const OBSERVATION_DIM = 10
 const ACTION_DIM = 3
@@ -27,6 +29,12 @@ export interface OrtRuntimeLike {
   ) => OrtTensorLike
   readonly InferenceSession: {
     create(modelSource: OnnxModelSource, options?: unknown): Promise<OrtSessionLike>
+  }
+  readonly env?: {
+    wasm?: {
+      wasmPaths?: string | { wasm?: string; mjs?: string }
+      numThreads?: number
+    }
   }
 }
 
@@ -78,8 +86,14 @@ function validateInputSizes(observation: readonly number[], actionMask: ActionMa
 }
 
 export async function loadOrtRuntime(): Promise<OrtRuntimeLike> {
-  const moduleName = "onnxruntime-web"
-  return (await import(moduleName)) as OrtRuntimeLike
+  const runtime = (await import("onnxruntime-web/wasm")) as OrtRuntimeLike
+  if (runtime.env?.wasm !== undefined) {
+    runtime.env.wasm.wasmPaths = {
+      wasm: ortWasmUrl,
+      mjs: ortWasmMjsUrl
+    }
+  }
+  return runtime
 }
 
 export class OnnxPolicyAdapter {
