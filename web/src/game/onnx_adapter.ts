@@ -1,14 +1,16 @@
 import { chooseBotActionFromMaskedLogits } from "./engine"
+import {
+  ACTION_DIM,
+  OBSERVATION_DIM,
+  ONNX_INPUT_ACTION_MASK_NAME,
+  ONNX_INPUT_OBSERVATION_NAME,
+  ONNX_OUTPUT_MASKED_LOGITS_NAME,
+  ONNX_OUTPUT_VALUE_NAME,
+  ONNX_VALUE_DIM
+} from "./generated/contract"
 import type { ActionId, ActionMask, BotDecisionMode } from "./types"
 import ortWasmUrl from "onnxruntime-web/ort-wasm-simd-threaded.wasm?url"
 import ortWasmMjsUrl from "onnxruntime-web/ort-wasm-simd-threaded.mjs?url"
-
-const OBSERVATION_DIM = 10
-const ACTION_DIM = 3
-const OBSERVATION_INPUT = "observation"
-const ACTION_MASK_INPUT = "action_mask"
-const MASKED_LOGITS_OUTPUT = "masked_logits"
-const VALUE_OUTPUT = "value"
 
 export type OnnxModelSource = string | ArrayBuffer | Uint8Array
 
@@ -133,12 +135,12 @@ export class OnnxPolicyAdapter {
     )
 
     const outputs = await this.session.run({
-      [OBSERVATION_INPUT]: observationTensor,
-      [ACTION_MASK_INPUT]: actionMaskTensor
+      [ONNX_INPUT_OBSERVATION_NAME]: observationTensor,
+      [ONNX_INPUT_ACTION_MASK_NAME]: actionMaskTensor
     })
 
-    const maskedLogitsOutput = requireOutput(outputs, MASKED_LOGITS_OUTPUT)
-    const valueOutput = requireOutput(outputs, VALUE_OUTPUT)
+    const maskedLogitsOutput = requireOutput(outputs, ONNX_OUTPUT_MASKED_LOGITS_NAME)
+    const valueOutput = requireOutput(outputs, ONNX_OUTPUT_VALUE_NAME)
 
     const maskedLogits = toFloat32Array(maskedLogitsOutput.data)
     const value = toFloat32Array(valueOutput.data)
@@ -147,7 +149,10 @@ export class OnnxPolicyAdapter {
       maskedLogits.length === ACTION_DIM,
       `Expected ${ACTION_DIM} masked logits values, got ${maskedLogits.length}.`
     )
-    assert(value.length === 1, `Expected value output length 1, got ${value.length}.`)
+    assert(
+      value.length === ONNX_VALUE_DIM,
+      `Expected value output length ${ONNX_VALUE_DIM}, got ${value.length}.`
+    )
 
     return { maskedLogits, value }
   }

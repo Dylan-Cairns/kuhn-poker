@@ -1,6 +1,7 @@
 # Kuhn Poker Rules (Roadmap Item 1)
 
 This project implements a 2-player variant of standard Kuhn Poker with one hand per episode.
+Machine-readable source for this contract lives at `contracts/kuhn.v1.json`.
 
 ## Deck and Cards
 

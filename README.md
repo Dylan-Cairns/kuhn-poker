@@ -31,6 +31,12 @@ python scripts/smoke_test.py
 pytest -q
 ```
 
+Regenerate shared Python/TypeScript contract bindings (after contract edits):
+
+```bash
+python scripts/generate_contract_bindings.py
+```
+
 Install and run web engine tests:
 
 ```bash
@@ -104,9 +110,13 @@ python scripts/play_cli.py --model-path checkpoints/maskable_ppo_kuhn.zip --huma
 ## Current Layout
 
 - `kuhn_poker/env.py`: PettingZoo AEC environment
+- `contracts/kuhn.v1.json`: canonical game contract (schema-first source of truth)
+- `contracts/schema/game_contract.schema.json`: JSON schema for contract validation
+- `kuhn_poker/generated/contract.py`: generated Python contract bindings
 - `kuhn_poker/opponents.py`: baseline opponents (random legal + simple heuristic)
 - `kuhn_poker/wrappers.py`: helper functions for conversion/masking integration
 - `scripts/train.py`: training entrypoint scaffold
+- `scripts/generate_contract_bindings.py`: contract-to-Python/TS codegen entrypoint
 - `scripts/export_onnx.py`: checkpoint to ONNX export entrypoint
 - `scripts/eval.py`: evaluation entrypoint scaffold
 - `scripts/smoke_test.py`: end-to-end sanity check
@@ -114,6 +124,7 @@ python scripts/play_cli.py --model-path checkpoints/maskable_ppo_kuhn.zip --huma
 - `docs/kuhn_rules.md`: exact Kuhn rules contract implemented by the environment
 - `docs/web_inference_contract.md`: locked browser ONNX I/O + action selection contract
 - `web/src/game/engine.ts`: frontend Kuhn rules/state machine engine
+- `web/src/game/generated/contract.ts`: generated TS contract bindings
 - `web/src/game/engine.test.ts`: frontend parity/unit tests
 - `web/src/game/onnx_adapter.ts`: browser ONNX Runtime adapter for policy inference
 - `web/src/game/onnx_adapter.test.ts`: adapter contract/unit tests

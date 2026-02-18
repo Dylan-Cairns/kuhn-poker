@@ -1,0 +1,106 @@
+{
+  "contract_name": "kuhn_poker",
+  "version": "1.0.0",
+  "description": "Schema-first cross-runtime contract for Kuhn Poker.",
+  "entities": {
+    "players": ["player_0", "player_1"],
+    "cards": ["J", "Q", "K"],
+    "public_actions": ["check", "bet", "call", "fold"],
+    "phases": ["deal", "p0_act", "p1_act", "p0_response", "p1_response", "terminal"]
+  },
+  "turn_model": {
+    "initial_phase": "p0_act",
+    "initial_actor": "player_0",
+    "terminal_phase": "terminal",
+    "open_action_phases": ["p0_act", "p1_act"],
+    "response_action_phases": ["p0_response", "p1_response"]
+  },
+  "actions": [
+    {
+      "id": 0,
+      "name": "CHECK_OR_CALL",
+      "labels": {
+        "open": "check",
+        "response": "call"
+      }
+    },
+    {
+      "id": 1,
+      "name": "BET",
+      "labels": {
+        "open": "bet",
+        "response": "bet"
+      }
+    },
+    {
+      "id": 2,
+      "name": "FOLD",
+      "labels": {
+        "open": "fold",
+        "response": "fold"
+      }
+    }
+  ],
+  "legal_masks_by_phase": {
+    "deal": [0, 0, 0],
+    "p0_act": [1, 1, 0],
+    "p1_act": [1, 1, 0],
+    "p0_response": [1, 0, 1],
+    "p1_response": [1, 0, 1],
+    "terminal": [0, 0, 0]
+  },
+  "observation": {
+    "size": 10,
+    "segments": [
+      {
+        "name": "private_card_one_hot",
+        "offset": 0,
+        "size": 3
+      },
+      {
+        "name": "public_history_one_hot",
+        "offset": 3,
+        "size": 5
+      },
+      {
+        "name": "current_actor_one_hot",
+        "offset": 8,
+        "size": 2
+      }
+    ],
+    "history_buckets": [
+      {
+        "index": 0,
+        "sequence": []
+      },
+      {
+        "index": 1,
+        "sequence": ["check"]
+      },
+      {
+        "index": 2,
+        "sequence": ["bet"]
+      },
+      {
+        "index": 3,
+        "sequence": ["check", "bet"]
+      },
+      {
+        "index": 4,
+        "sequence": null
+      }
+    ],
+    "terminal_history_index": 4
+  },
+  "onnx": {
+    "input_names": {
+      "observation": "observation",
+      "action_mask": "action_mask"
+    },
+    "output_names": {
+      "masked_logits": "masked_logits",
+      "value": "value"
+    },
+    "value_dim": 1
+  }
+}

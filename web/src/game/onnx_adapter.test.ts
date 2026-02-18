@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { ACTION_BET, ACTION_CHECK_OR_CALL, ACTION_FOLD } from "./types"
+import { ACTION_DIM, OBSERVATION_DIM } from "./generated/contract"
 import {
   OnnxPolicyAdapter,
   type OnnxModelSource,
@@ -70,8 +71,8 @@ describe("onnx adapter", () => {
     expect(Array.from(result.maskedLogits)).toEqual([0.25, 1.5, -1e9])
     expect(result.value[0]).toBeCloseTo(0.42)
     expect(session.lastFeeds).not.toBeNull()
-    expect(session.lastFeeds?.observation.dims).toEqual([1, 10])
-    expect(session.lastFeeds?.action_mask.dims).toEqual([1, 3])
+    expect(session.lastFeeds?.observation.dims).toEqual([1, OBSERVATION_DIM])
+    expect(session.lastFeeds?.action_mask.dims).toEqual([1, ACTION_DIM])
     expect(Array.from(session.lastFeeds?.action_mask.data ?? [])).toEqual([1, 1, 0])
   })
 
@@ -117,7 +118,7 @@ describe("onnx adapter", () => {
     })
 
     await expect(adapter.infer([1, 0, 0], [1, 1, 0])).rejects.toThrow(
-      "Observation must have length 10"
+      `Observation must have length ${OBSERVATION_DIM}`
     )
   })
 

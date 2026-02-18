@@ -8,6 +8,13 @@ from typing import Final
 import torch
 from sb3_contrib import MaskablePPO
 
+from kuhn_poker.generated.contract import (
+    ONNX_INPUT_ACTION_MASK_NAME,
+    ONNX_INPUT_OBSERVATION_NAME,
+    ONNX_OUTPUT_MASKED_LOGITS_NAME,
+    ONNX_OUTPUT_VALUE_NAME,
+)
+
 DEFAULT_ONNX_OPSET: Final[int] = 17
 _ILLEGAL_LOGIT: Final[float] = -1e9
 
@@ -72,13 +79,13 @@ def export_maskable_ppo_to_onnx(
             (dummy_observation, dummy_action_mask),
             str(onnx_path),
             dynamo=False,
-            input_names=["observation", "action_mask"],
-            output_names=["masked_logits", "value"],
+            input_names=[ONNX_INPUT_OBSERVATION_NAME, ONNX_INPUT_ACTION_MASK_NAME],
+            output_names=[ONNX_OUTPUT_MASKED_LOGITS_NAME, ONNX_OUTPUT_VALUE_NAME],
             dynamic_axes={
-                "observation": {0: "batch"},
-                "action_mask": {0: "batch"},
-                "masked_logits": {0: "batch"},
-                "value": {0: "batch"},
+                ONNX_INPUT_OBSERVATION_NAME: {0: "batch"},
+                ONNX_INPUT_ACTION_MASK_NAME: {0: "batch"},
+                ONNX_OUTPUT_MASKED_LOGITS_NAME: {0: "batch"},
+                ONNX_OUTPUT_VALUE_NAME: {0: "batch"},
             },
             opset_version=opset_version,
             do_constant_folding=True,

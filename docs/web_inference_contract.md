@@ -2,6 +2,13 @@
 
 This document locks the browser-side inference contract for Kuhn Poker.
 
+Canonical source:
+
+- `contracts/kuhn.v1.json` (schema-first source of truth)
+- Generated bindings:
+  - `kuhn_poker/generated/contract.py`
+  - `web/src/game/generated/contract.ts`
+
 ## Model Interface (ONNX)
 
 The exported ONNX policy model uses:

@@ -75,15 +75,20 @@ Do not change action IDs after training starts; this breaks checkpoints and eval
 ## Repo Layout Contract
 
 Target layout:
+- `contracts/kuhn.v1.json` - canonical schema-first game contract
+- `contracts/schema/game_contract.schema.json` - JSON schema for contract validation
 - `kuhn_poker/env.py` - PettingZoo AEC environment
+- `kuhn_poker/generated/contract.py` - generated Python bindings from contract
 - `kuhn_poker/wrappers.py` - compatibility wrappers for SB3/masking
 - `kuhn_poker/opponents.py` - random-legal and heuristic opponents
+- `scripts/generate_contract_bindings.py` - contract codegen entrypoint (Python + TS)
 - `scripts/train.py` - MaskablePPO training entrypoint
 - `scripts/export_onnx.py` - checkpoint to ONNX export entrypoint
 - `scripts/eval.py` - evaluation entrypoint
 - `scripts/smoke_test.py` - end-to-end sanity run
 - `tests/` - environment and integration checks
 - `web/src/game/engine.ts` - frontend Kuhn rules engine/state machine
+- `web/src/game/generated/contract.ts` - generated TS bindings from contract
 - `web/src/game/engine.test.ts` - frontend unit/parity tests
 - `web/src/game/onnx_adapter.ts` - browser ONNX Runtime policy adapter
 - `web/src/game/onnx_adapter.test.ts` - adapter contract/unit tests
@@ -99,6 +104,7 @@ If layout changes, keep README and command examples aligned.
 Agents should keep these working (update as implementation evolves):
 - Install deps: `pip install -e .` or `pip install -r requirements.txt`
 - Train: `python scripts/train.py`
+- Generate contract bindings: `python scripts/generate_contract_bindings.py`
 - Export ONNX: `python scripts/export_onnx.py --checkpoint-path checkpoints/maskable_ppo_kuhn.zip --onnx-out models/kuhn_policy.onnx`
 - Eval: `python scripts/eval.py`
 - Sanity run: `python scripts/smoke_test.py`
@@ -111,6 +117,7 @@ Agents should keep these working (update as implementation evolves):
 
 Before marking work complete:
 - Environment `reset()` and `step()` run without errors
+- Contract bindings are up to date (`python scripts/generate_contract_bindings.py --check`)
 - Action mask always has at least one legal action
 - Illegal actions are never selected when masking is enabled
 - Episode terminates correctly for all legal action paths

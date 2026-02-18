@@ -10,23 +10,22 @@ from gymnasium import spaces
 from gymnasium.utils import seeding
 from pettingzoo import AECEnv
 
-from kuhn_poker.constants import ACTION_DIM, AGENT_NAMES, CARD_LABELS, Action
-
-_HISTORY_TO_INDEX = {
-    (): 0,
-    ("check",): 1,
-    ("bet",): 2,
-    ("check", "bet"): 3,
-}
-_TERMINAL_HISTORY_INDEX = 4
-_PRIVATE_CARD_DIM = len(CARD_LABELS)
-_HISTORY_DIM = 5
-_ACTOR_DIM = len(AGENT_NAMES)
-_OBS_SIZE = _PRIVATE_CARD_DIM + _HISTORY_DIM + _ACTOR_DIM
-
-_PRIVATE_CARD_OFFSET = 0
-_HISTORY_OFFSET = _PRIVATE_CARD_OFFSET + _PRIVATE_CARD_DIM
-_ACTOR_OFFSET = _HISTORY_OFFSET + _HISTORY_DIM
+from kuhn_poker.constants import ACTION_DIM, AGENT_NAMES, CARD_LABELS
+from kuhn_poker.generated.contract import (
+    ACTION_OPEN_LABEL_BY_ID,
+    ACTION_RESPONSE_LABEL_BY_ID,
+    INITIAL_ACTOR,
+    INITIAL_PHASE,
+    LEGAL_MASK_BY_PHASE,
+    OBS_ACTOR_OFFSET,
+    OBSERVATION_DIM,
+    OBS_HISTORY_INDEX_BY_SEQUENCE,
+    OBS_HISTORY_OFFSET,
+    OBS_PRIVATE_CARD_OFFSET,
+    OBS_TERMINAL_HISTORY_INDEX,
+    PLAYER_INDEX_BY_ID,
+    RESPONSE_ACTION_PHASES,
+)
 
 
 class HandPhase(str, Enum):
@@ -62,7 +61,7 @@ class KuhnPokerAECEnv(AECEnv):
             agent: spaces.Dict(
                 {
                     "observation": spaces.Box(
-                        low=0, high=1, shape=(_OBS_SIZE,), dtype=np.int8
+                        low=0, high=1, shape=(OBSERVATION_DIM,), dtype=np.int8
                     ),
                     "action_mask": spaces.MultiBinary(ACTION_DIM),
                 }
@@ -84,7 +83,7 @@ class KuhnPokerAECEnv(AECEnv):
         self.truncations: dict[str, bool] = {}
         self.infos: dict[str, dict[str, object]] = {}
 
-        self.agent_selection = self.possible_agents[0]
+        self.agent_selection = INITIAL_ACTOR
 
     def observation_space(self, agent: str) -> spaces.Space:
         return self._observation_spaces[agent]
@@ -114,22 +113,22 @@ class KuhnPokerAECEnv(AECEnv):
 
         self.phase = HandPhase.DEAL
         self._advance_from_deal()
-        self.agent_selection = self.possible_agents[0]
+        self.agent_selection = INITIAL_ACTOR
         self._sync_infos()
 
     def observe(self, agent: str) -> dict[str, np.ndarray]:
-        observation = np.zeros(_OBS_SIZE, dtype=np.int8)
+        observation = np.zeros(OBSERVATION_DIM, dtype=np.int8)
 
         if agent in self.private_cards:
             card_index = self.private_cards[agent]
-            observation[_PRIVATE_CARD_OFFSET + card_index] = 1
+            observation[OBS_PRIVATE_CARD_OFFSET + card_index] = 1
 
         history_index = self._history_index()
-        observation[_HISTORY_OFFSET + history_index] = 1
+        observation[OBS_HISTORY_OFFSET + history_index] = 1
 
         actor_index = self._current_actor_index()
         if actor_index is not None:
-            observation[_ACTOR_OFFSET + actor_index] = 1
+            observation[OBS_ACTOR_OFFSET + actor_index] = 1
 
         return {
             "observation": observation,
@@ -186,20 +185,15 @@ class KuhnPokerAECEnv(AECEnv):
             or self.truncations.get(agent, False)
         ):
             return np.zeros(ACTION_DIM, dtype=np.int8)
-
-        if self.phase in (HandPhase.P0_ACT, HandPhase.P1_ACT):
-            return np.array([1, 1, 0], dtype=np.int8)
-        if self.phase in (HandPhase.P0_RESPONSE, HandPhase.P1_RESPONSE):
-            return np.array([1, 0, 1], dtype=np.int8)
-        return np.zeros(ACTION_DIM, dtype=np.int8)
+        return np.asarray(LEGAL_MASK_BY_PHASE[self.phase.value], dtype=np.int8)
 
     def _action_token(self, action: int) -> str:
-        facing_bet = self.phase in (HandPhase.P0_RESPONSE, HandPhase.P1_RESPONSE)
-        if action == Action.CHECK_OR_CALL:
-            return "call" if facing_bet else "check"
-        if action == Action.BET:
-            return "bet"
-        return "fold"
+        labels = (
+            ACTION_RESPONSE_LABEL_BY_ID
+            if self.phase.value in RESPONSE_ACTION_PHASES
+            else ACTION_OPEN_LABEL_BY_ID
+        )
+        return labels[action]
 
     def _showdown_winner(self) -> str:
         p0, p1 = self.possible_agents
@@ -221,8 +215,8 @@ class KuhnPokerAECEnv(AECEnv):
     def _advance_from_deal(self) -> None:
         if self.phase != HandPhase.DEAL:
             raise RuntimeError(f"Cannot advance from non-deal phase: {self.phase}")
-        self.phase = HandPhase.P0_ACT
-        self.agent_selection = self.possible_agents[0]
+        self.phase = HandPhase(INITIAL_PHASE)
+        self.agent_selection = INITIAL_ACTOR
 
     def _apply_action_effects(self, agent: str, token: str) -> None:
         if token in ("bet", "call"):
@@ -276,9 +270,11 @@ class KuhnPokerAECEnv(AECEnv):
         }
 
     def _history_index(self) -> int:
-        return _HISTORY_TO_INDEX.get(tuple(self.history), _TERMINAL_HISTORY_INDEX)
+        return OBS_HISTORY_INDEX_BY_SEQUENCE.get(
+            tuple(self.history), OBS_TERMINAL_HISTORY_INDEX
+        )
 
     def _current_actor_index(self) -> Optional[int]:
         if self.phase == HandPhase.TERMINAL:
             return None
-        return 0 if self.agent_selection == self.possible_agents[0] else 1
+        return PLAYER_INDEX_BY_ID[self.agent_selection]

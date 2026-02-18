@@ -1,9 +1,9 @@
 import {
   ACTION_BET,
+  ACTION_DIM,
   ACTION_CHECK_OR_CALL,
   ACTION_FOLD,
   CARDS,
-  PLAYERS,
   type ActionId,
   type ActionMask,
   type BotDecisionMode,
@@ -12,8 +12,30 @@ import {
   type PlayerId,
   type PublicAction
 } from "./types";
+import {
+  ACTION_OPEN_LABEL_BY_ID,
+  ACTION_RESPONSE_LABEL_BY_ID,
+  CARD_INDEX_BY_LABEL,
+  INITIAL_ACTOR,
+  INITIAL_PHASE,
+  LEGAL_MASK_BY_PHASE,
+  NO_LEGAL_ACTION_MASK,
+  OBS_ACTOR_OFFSET,
+  OBS_HISTORY_OFFSET,
+  OBS_HISTORY_SEQUENCE_TO_INDEX,
+  OBS_PRIVATE_CARD_OFFSET,
+  OBS_TERMINAL_HISTORY_INDEX,
+  OBSERVATION_DIM,
+  PLAYER_INDEX_BY_ID,
+  RESPONSE_ACTION_PHASES
+} from "./generated/contract";
 
-const CARD_INDEX: Record<Card, number> = { J: 0, Q: 1, K: 2 };
+const ACTION_OPEN_LABELS = ACTION_OPEN_LABEL_BY_ID as unknown as Record<number, PublicAction>;
+const ACTION_RESPONSE_LABELS = ACTION_RESPONSE_LABEL_BY_ID as unknown as Record<
+  number,
+  PublicAction
+>;
+const HISTORY_KEY_TO_INDEX = OBS_HISTORY_SEQUENCE_TO_INDEX as unknown as Record<string, number>;
 
 function nextPlayer(player: PlayerId): PlayerId {
   return player === "player_0" ? "player_1" : "player_0";
@@ -27,8 +49,8 @@ function assert(condition: boolean, message: string): asserts condition {
 
 export function createInitialState(privateCards: Record<PlayerId, Card>): HandState {
   return {
-    phase: "p0_act",
-    actor: "player_0",
+    phase: INITIAL_PHASE,
+    actor: INITIAL_ACTOR,
     privateCards: { ...privateCards },
     history: [],
     contributions: { player_0: 1, player_1: 1 },
@@ -54,31 +76,21 @@ export function createRandomInitialState(rng: () => number = Math.random): HandS
 
 export function legalActionMask(state: HandState, viewer: PlayerId): ActionMask {
   if (state.terminalReturns !== null || state.actor !== viewer) {
-    return [0, 0, 0];
+    return [...NO_LEGAL_ACTION_MASK] as ActionMask;
   }
-  if (state.phase === "p0_act" || state.phase === "p1_act") {
-    return [1, 1, 0];
-  }
-  if (state.phase === "p0_response" || state.phase === "p1_response") {
-    return [1, 0, 1];
-  }
-  return [0, 0, 0];
+  return [...LEGAL_MASK_BY_PHASE[state.phase]] as ActionMask;
 }
 
 function actionToken(action: ActionId, phase: HandState["phase"]): PublicAction {
-  const response = phase === "p0_response" || phase === "p1_response";
-  if (action === ACTION_CHECK_OR_CALL) {
-    return response ? "call" : "check";
+  if (RESPONSE_ACTION_PHASES.includes(phase as (typeof RESPONSE_ACTION_PHASES)[number])) {
+    return ACTION_RESPONSE_LABELS[action];
   }
-  if (action === ACTION_BET) {
-    return "bet";
-  }
-  return "fold";
+  return ACTION_OPEN_LABELS[action];
 }
 
 function showdownWinner(privateCards: Record<PlayerId, Card>): PlayerId {
-  const p0 = CARD_INDEX[privateCards.player_0];
-  const p1 = CARD_INDEX[privateCards.player_1];
+  const p0 = CARD_INDEX_BY_LABEL[privateCards.player_0];
+  const p1 = CARD_INDEX_BY_LABEL[privateCards.player_1];
   return p0 > p1 ? "player_0" : "player_1";
 }
 
@@ -95,28 +107,18 @@ function terminalReturns(
 }
 
 function historyIndex(history: readonly PublicAction[]): number {
-  if (history.length === 0) {
-    return 0;
-  }
-  if (history.length === 1 && history[0] === "check") {
-    return 1;
-  }
-  if (history.length === 1 && history[0] === "bet") {
-    return 2;
-  }
-  if (history.length === 2 && history[0] === "check" && history[1] === "bet") {
-    return 3;
-  }
-  return 4;
+  const key = history.join("|");
+  const bucketIndex = HISTORY_KEY_TO_INDEX[key];
+  return bucketIndex ?? OBS_TERMINAL_HISTORY_INDEX;
 }
 
 export function buildObservation(state: HandState, viewer: PlayerId): number[] {
-  const obs = new Array<number>(10).fill(0);
-  obs[CARD_INDEX[state.privateCards[viewer]]] = 1;
-  obs[3 + historyIndex(state.history)] = 1;
+  const obs = new Array<number>(OBSERVATION_DIM).fill(0);
+  obs[OBS_PRIVATE_CARD_OFFSET + CARD_INDEX_BY_LABEL[state.privateCards[viewer]]] = 1;
+  obs[OBS_HISTORY_OFFSET + historyIndex(state.history)] = 1;
 
   if (state.actor !== null) {
-    obs[8 + (state.actor === "player_0" ? 0 : 1)] = 1;
+    obs[OBS_ACTOR_OFFSET + PLAYER_INDEX_BY_ID[state.actor]] = 1;
   }
   return obs;
 }
@@ -212,7 +214,9 @@ export function chooseBotActionFromMaskedLogits(
   mode: BotDecisionMode,
   rng: () => number = Math.random
 ): ActionId {
-  const legalIds = [0, 1, 2].filter((a) => mask[a as ActionId] === 1) as ActionId[];
+  const legalIds = Array.from({ length: ACTION_DIM }, (_, actionId) => actionId).filter(
+    (actionId) => mask[actionId as ActionId] === 1
+  ) as ActionId[];
   assert(legalIds.length > 0, "No legal actions available.");
 
   if (mode === "deterministic") {
