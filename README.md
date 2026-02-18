@@ -31,6 +31,12 @@ Run a short masked PPO training smoke:
 python scripts/train.py --total-timesteps 2048 --n-steps 128 --batch-size 64
 ```
 
+Play against a trained checkpoint in the CLI:
+
+```bash
+python scripts/play_cli.py --model-path checkpoints/maskable_ppo_kuhn.zip
+```
+
 ## Current Layout
 
 - `kuhn_poker/env.py`: PettingZoo AEC environment
