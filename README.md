@@ -38,6 +38,5 @@ pytest -q
 
 ## Next Steps
 
-1. Finalize the explicit PettingZoo AEC state machine phases.
-2. Add SB3 + MaskablePPO training loop for shared-policy self-play.
-3. Expand evaluation and logging.
+1. Add SB3 + MaskablePPO training loop for shared-policy self-play.
+2. Expand evaluation and logging.

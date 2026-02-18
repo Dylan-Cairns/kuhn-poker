@@ -20,6 +20,27 @@ This project implements a 2-player variant of standard Kuhn Poker with one hand 
 
 `player_0` always acts first.
 
+## AEC Phase State Machine
+
+Environment phases are explicit and finite:
+
+- `deal` -> internal setup, no agent action
+- `p0_act` -> `player_0` first decision
+- `p1_act` -> `player_1` decision after `player_0` checked
+- `p0_response` -> `player_0` response to `player_1` bet
+- `p1_response` -> `player_1` response to `player_0` bet
+- `terminal` -> hand is over, rewards assigned
+
+Phase transitions:
+
+- `deal -> p0_act`
+- `p0_act --check--> p1_act`
+- `p0_act --bet--> p1_response`
+- `p1_act --check--> terminal` (showdown)
+- `p1_act --bet--> p0_response`
+- `p0_response|p1_response --call--> terminal` (showdown)
+- `p0_response|p1_response --fold--> terminal` (bettor wins)
+
 Public history starts empty (`[]`) and legal actions are:
 
 1. `[]`:

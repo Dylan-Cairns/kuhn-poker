@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from enum import Enum
 from typing import Optional
 
 import numpy as np
@@ -19,6 +20,17 @@ _HISTORY_TO_INDEX = {
 }
 _TERMINAL_HISTORY_INDEX = 4
 _OBS_SIZE = len(CARD_LABELS) + 5
+
+
+class HandPhase(str, Enum):
+    """Explicit phase machine for one Kuhn hand."""
+
+    DEAL = "deal"
+    P0_ACT = "p0_act"
+    P1_ACT = "p1_act"
+    P0_RESPONSE = "p0_response"
+    P1_RESPONSE = "p1_response"
+    TERMINAL = "terminal"
 
 
 class KuhnPokerAECEnv(AECEnv):
@@ -57,12 +69,13 @@ class KuhnPokerAECEnv(AECEnv):
         self.history: list[str] = []
         self.last_bettor: Optional[str] = None
         self.contributions: dict[str, int] = {}
+        self.phase = HandPhase.DEAL
 
         self.rewards: dict[str, float] = {}
         self._cumulative_rewards: dict[str, float] = {}
         self.terminations: dict[str, bool] = {}
         self.truncations: dict[str, bool] = {}
-        self.infos: dict[str, dict[str, np.ndarray]] = {}
+        self.infos: dict[str, dict[str, object]] = {}
 
         self.agent_selection = self.possible_agents[0]
 
@@ -92,6 +105,8 @@ class KuhnPokerAECEnv(AECEnv):
         self.history = []
         self.last_bettor = None
 
+        self.phase = HandPhase.DEAL
+        self._advance_from_deal()
         self.agent_selection = self.possible_agents[0]
         self._sync_infos()
 
@@ -131,19 +146,11 @@ class KuhnPokerAECEnv(AECEnv):
             )
 
         token = self._action_token(action)
-        if token in ("bet", "call"):
-            self.contributions[agent] += 1
-        if token == "bet":
-            self.last_bettor = agent
-        self.history.append(token)
-
-        winner = self._resolve_terminal_winner()
-        if winner is None:
-            self.agent_selection = self._next_agent(agent)
-        else:
+        self._apply_action_effects(agent, token)
+        winner = self._advance_phase(agent, token)
+        if winner is not None:
             self._set_terminal_rewards(winner)
             self.terminations = {name: True for name in self.agents}
-            self.agent_selection = self._next_agent(agent)
 
         self._sync_infos()
         self._accumulate_rewards()
@@ -152,8 +159,9 @@ class KuhnPokerAECEnv(AECEnv):
         if self.render_mode != "human":
             return
         print(
-            f"history={self.history}, current={self.agent_selection}, "
-            f"cards={self.private_cards}, contributions={self.contributions}"
+            f"phase={self.phase.value}, history={self.history}, "
+            f"current={self.agent_selection}, cards={self.private_cards}, "
+            f"contributions={self.contributions}"
         )
 
     def close(self) -> None:
@@ -167,29 +175,19 @@ class KuhnPokerAECEnv(AECEnv):
         ):
             return np.zeros(ACTION_DIM, dtype=np.int8)
 
-        history = tuple(self.history)
-        if history in ((), ("check",)):
+        if self.phase in (HandPhase.P0_ACT, HandPhase.P1_ACT):
             return np.array([1, 1, 0], dtype=np.int8)
-        if history in (("bet",), ("check", "bet")):
+        if self.phase in (HandPhase.P0_RESPONSE, HandPhase.P1_RESPONSE):
             return np.array([1, 0, 1], dtype=np.int8)
         return np.zeros(ACTION_DIM, dtype=np.int8)
 
     def _action_token(self, action: int) -> str:
-        history = tuple(self.history)
-        facing_bet = history in (("bet",), ("check", "bet"))
+        facing_bet = self.phase in (HandPhase.P0_RESPONSE, HandPhase.P1_RESPONSE)
         if action == Action.CHECK_OR_CALL:
             return "call" if facing_bet else "check"
         if action == Action.BET_OR_RAISE:
             return "bet"
         return "fold"
-
-    def _resolve_terminal_winner(self) -> Optional[str]:
-        history = tuple(self.history)
-        if history in (("check", "check"), ("bet", "call"), ("check", "bet", "call")):
-            return self._showdown_winner()
-        if history in (("bet", "fold"), ("check", "bet", "fold")):
-            return self.last_bettor
-        return None
 
     def _showdown_winner(self) -> str:
         p0, p1 = self.possible_agents
@@ -208,7 +206,59 @@ class KuhnPokerAECEnv(AECEnv):
             return self.possible_agents[1]
         return self.possible_agents[0]
 
+    def _advance_from_deal(self) -> None:
+        if self.phase != HandPhase.DEAL:
+            raise RuntimeError(f"Cannot advance from non-deal phase: {self.phase}")
+        self.phase = HandPhase.P0_ACT
+        self.agent_selection = self.possible_agents[0]
+
+    def _apply_action_effects(self, agent: str, token: str) -> None:
+        if token in ("bet", "call"):
+            self.contributions[agent] += 1
+        if token == "bet":
+            self.last_bettor = agent
+        self.history.append(token)
+
+    def _advance_phase(self, agent: str, token: str) -> Optional[str]:
+        p0, p1 = self.possible_agents
+
+        if self.phase == HandPhase.P0_ACT:
+            if token == "check":
+                self.phase = HandPhase.P1_ACT
+                self.agent_selection = p1
+                return None
+            if token == "bet":
+                self.phase = HandPhase.P1_RESPONSE
+                self.agent_selection = p1
+                return None
+
+        elif self.phase == HandPhase.P1_ACT:
+            if token == "check":
+                self.phase = HandPhase.TERMINAL
+                self.agent_selection = p0
+                return self._showdown_winner()
+            if token == "bet":
+                self.phase = HandPhase.P0_RESPONSE
+                self.agent_selection = p0
+                return None
+
+        elif self.phase in (HandPhase.P0_RESPONSE, HandPhase.P1_RESPONSE):
+            self.phase = HandPhase.TERMINAL
+            self.agent_selection = self._next_agent(agent)
+            if token == "call":
+                return self._showdown_winner()
+            if token == "fold":
+                return self.last_bettor
+
+        raise RuntimeError(
+            f"Invalid transition. phase={self.phase.value}, token={token}, agent={agent}"
+        )
+
     def _sync_infos(self) -> None:
         self.infos = {
-            agent: {"action_mask": self._legal_action_mask(agent)} for agent in self.possible_agents
+            agent: {
+                "action_mask": self._legal_action_mask(agent),
+                "phase": self.phase.value,
+            }
+            for agent in self.possible_agents
         }
