@@ -34,9 +34,10 @@ pytest -q
 - `scripts/eval.py`: evaluation entrypoint scaffold
 - `scripts/smoke_test.py`: end-to-end sanity check
 - `tests/`: smoke tests for environment/opponents
+- `docs/kuhn_rules.md`: exact Kuhn rules contract implemented by the environment
 
 ## Next Steps
 
-1. Finalize exact Kuhn rule implementation details and state machine.
+1. Finalize the explicit PettingZoo AEC state machine phases.
 2. Add SB3 + MaskablePPO training loop for shared-policy self-play.
 3. Expand evaluation and logging.
