@@ -25,6 +25,12 @@ python scripts/smoke_test.py
 pytest -q
 ```
 
+Run a short masked PPO training smoke:
+
+```bash
+python scripts/train.py --total-timesteps 2048 --n-steps 128 --batch-size 64
+```
+
 ## Current Layout
 
 - `kuhn_poker/env.py`: PettingZoo AEC environment
@@ -38,10 +44,11 @@ pytest -q
 
 ## Next Steps
 
-1. Add SB3 + MaskablePPO training loop for shared-policy self-play.
-2. Expand evaluation and logging.
+1. Evaluate trained checkpoints against random/heuristic baselines.
+2. Add simple logging/plots and iterate on hyperparameters.
 
 Roadmap status:
 - Item 1 (rules): complete
 - Item 2 (AEC state machine): complete
 - Item 3 (observation/action/mask encoding): complete
+- Item 4 (MaskablePPO training loop): complete
