@@ -19,7 +19,14 @@ _HISTORY_TO_INDEX = {
     ("check", "bet"): 3,
 }
 _TERMINAL_HISTORY_INDEX = 4
-_OBS_SIZE = len(CARD_LABELS) + 5
+_PRIVATE_CARD_DIM = len(CARD_LABELS)
+_HISTORY_DIM = 5
+_ACTOR_DIM = len(AGENT_NAMES)
+_OBS_SIZE = _PRIVATE_CARD_DIM + _HISTORY_DIM + _ACTOR_DIM
+
+_PRIVATE_CARD_OFFSET = 0
+_HISTORY_OFFSET = _PRIVATE_CARD_OFFSET + _PRIVATE_CARD_DIM
+_ACTOR_OFFSET = _HISTORY_OFFSET + _HISTORY_DIM
 
 
 class HandPhase(str, Enum):
@@ -114,10 +121,15 @@ class KuhnPokerAECEnv(AECEnv):
         observation = np.zeros(_OBS_SIZE, dtype=np.int8)
 
         if agent in self.private_cards:
-            observation[self.private_cards[agent]] = 1
+            card_index = self.private_cards[agent]
+            observation[_PRIVATE_CARD_OFFSET + card_index] = 1
 
-        history_index = _HISTORY_TO_INDEX.get(tuple(self.history), _TERMINAL_HISTORY_INDEX)
-        observation[len(CARD_LABELS) + history_index] = 1
+        history_index = self._history_index()
+        observation[_HISTORY_OFFSET + history_index] = 1
+
+        actor_index = self._current_actor_index()
+        if actor_index is not None:
+            observation[_ACTOR_OFFSET + actor_index] = 1
 
         return {
             "observation": observation,
@@ -262,3 +274,11 @@ class KuhnPokerAECEnv(AECEnv):
             }
             for agent in self.possible_agents
         }
+
+    def _history_index(self) -> int:
+        return _HISTORY_TO_INDEX.get(tuple(self.history), _TERMINAL_HISTORY_INDEX)
+
+    def _current_actor_index(self) -> Optional[int]:
+        if self.phase == HandPhase.TERMINAL:
+            return None
+        return 0 if self.agent_selection == self.possible_agents[0] else 1

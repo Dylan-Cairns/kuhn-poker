@@ -41,6 +41,44 @@ Phase transitions:
 - `p0_response|p1_response --call--> terminal` (showdown)
 - `p0_response|p1_response --fold--> terminal` (bettor wins)
 
+## Action Encoding and Masks (Roadmap Item 3)
+
+Fixed discrete action IDs:
+
+- `0 = CHECK_OR_CALL`
+- `1 = BET_OR_RAISE`
+- `2 = FOLD`
+
+Mask semantics:
+
+- Mask shape: `(3,)`
+- Mask dtype: `int8`
+- `1` means legal, `0` means illegal
+
+By phase:
+
+- `p0_act` / `p1_act` -> `[1, 1, 0]` (check/bet)
+- `p0_response` / `p1_response` -> `[1, 0, 1]` (call/fold)
+- `terminal` or not-current agent -> `[0, 0, 0]`
+
+## Observation Encoding (Roadmap Item 3)
+
+Observation is a fixed binary vector of length `10`:
+
+- Indices `[0:3]`: private card one-hot (`J, Q, K`)
+- Indices `[3:8]`: public history one-hot
+- Indices `[8:10]`: current actor one-hot (`player_0`, `player_1`)
+
+History one-hot mapping:
+
+- index `3` (`history_id=0`): `[]`
+- index `4` (`history_id=1`): `["check"]`
+- index `5` (`history_id=2`): `["bet"]`
+- index `6` (`history_id=3`): `["check", "bet"]`
+- index `7` (`history_id=4`): terminal/other complete history
+
+At terminal, actor bits are `[0, 0]`.
+
 Public history starts empty (`[]`) and legal actions are:
 
 1. `[]`:

@@ -40,3 +40,8 @@ pytest -q
 
 1. Add SB3 + MaskablePPO training loop for shared-policy self-play.
 2. Expand evaluation and logging.
+
+Roadmap status:
+- Item 1 (rules): complete
+- Item 2 (AEC state machine): complete
+- Item 3 (observation/action/mask encoding): complete

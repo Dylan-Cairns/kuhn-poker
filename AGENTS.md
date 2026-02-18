@@ -61,10 +61,14 @@ Keep this minimal and explicit. Prefer a small phase enum and compact public his
 
 - Fixed discrete action space of size 3 using IDs above
 - Per-turn legal action mask included in observation `dict` (or in `info`, with a wrapper that makes it available to MaskablePPO)
-- Observation should be a compact fixed-size encoding of:
-  - private card
-  - public betting history
-  - current actor/turn if needed for shared-policy disambiguation
+- Legal action mask semantics:
+  - acting in `p0_act`/`p1_act`: `[1, 1, 0]`
+  - acting in `p0_response`/`p1_response`: `[1, 0, 1]`
+  - non-acting or terminal: `[0, 0, 0]`
+- Observation vector is fixed length `10`:
+  - `[0:3]` private card one-hot (`J,Q,K`)
+  - `[3:8]` public history one-hot (`[]`, `[check]`, `[bet]`, `[check,bet]`, terminal bucket)
+  - `[8:10]` current actor one-hot (`player_0`, `player_1`)
 
 Do not change action IDs after training starts; this breaks checkpoints and evaluations.
 
