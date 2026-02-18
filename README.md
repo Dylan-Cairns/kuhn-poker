@@ -31,6 +31,14 @@ python scripts/smoke_test.py
 pytest -q
 ```
 
+Install and run web engine tests:
+
+```bash
+cd web
+npm install
+npm test
+```
+
 Run a short masked PPO training smoke:
 
 ```bash
@@ -66,6 +74,9 @@ python scripts/play_cli.py --model-path checkpoints/maskable_ppo_kuhn.zip --huma
 - `scripts/smoke_test.py`: end-to-end sanity check
 - `tests/`: smoke tests for environment/opponents
 - `docs/kuhn_rules.md`: exact Kuhn rules contract implemented by the environment
+- `docs/web_inference_contract.md`: locked browser ONNX I/O + action selection contract
+- `web/src/game/engine.ts`: frontend Kuhn rules/state machine engine
+- `web/src/game/engine.test.ts`: frontend parity/unit tests
 
 ## Next Steps
 

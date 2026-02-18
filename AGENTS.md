@@ -83,6 +83,9 @@ Target layout:
 - `scripts/eval.py` - evaluation entrypoint
 - `scripts/smoke_test.py` - end-to-end sanity run
 - `tests/` - environment and integration checks
+- `web/src/game/engine.ts` - frontend Kuhn rules engine/state machine
+- `web/src/game/engine.test.ts` - frontend unit/parity tests
+- `docs/web_inference_contract.md` - browser ONNX I/O contract
 
 If layout changes, keep README and command examples aligned.
 
@@ -95,6 +98,7 @@ Agents should keep these working (update as implementation evolves):
 - Eval: `python scripts/eval.py`
 - Sanity run: `python scripts/smoke_test.py`
 - Tests: `pytest -q`
+- Frontend engine tests: `cd web && npm test`
 
 ## Validation Checklist
 
