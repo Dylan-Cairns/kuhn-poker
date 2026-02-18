@@ -77,6 +77,8 @@ python scripts/play_cli.py --model-path checkpoints/maskable_ppo_kuhn.zip --huma
 - `docs/web_inference_contract.md`: locked browser ONNX I/O + action selection contract
 - `web/src/game/engine.ts`: frontend Kuhn rules/state machine engine
 - `web/src/game/engine.test.ts`: frontend parity/unit tests
+- `web/src/game/onnx_adapter.ts`: browser ONNX Runtime adapter for policy inference
+- `web/src/game/onnx_adapter.test.ts`: adapter contract/unit tests
 
 ## Next Steps
 

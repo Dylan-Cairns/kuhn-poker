@@ -85,6 +85,8 @@ Target layout:
 - `tests/` - environment and integration checks
 - `web/src/game/engine.ts` - frontend Kuhn rules engine/state machine
 - `web/src/game/engine.test.ts` - frontend unit/parity tests
+- `web/src/game/onnx_adapter.ts` - browser ONNX Runtime policy adapter
+- `web/src/game/onnx_adapter.test.ts` - adapter contract/unit tests
 - `docs/web_inference_contract.md` - browser ONNX I/O contract
 
 If layout changes, keep README and command examples aligned.
